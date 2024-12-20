@@ -114,11 +114,20 @@ longitud = length . texto
 -- Le agregaron intro: La obra plagiada empieza a su manera, pero al final incluye totalmente el texto de la original. 
 -- Por ejemplo, E es plagio de C.
 
---leAgregaronIntro :: Plagio
---leAgregaronIntro obraPlagio obraOriginal = nombreIncluidoEnElFinal obraPlagio obraOriginal && fuePublicadaDespues obraPlagio obraOriginal
+leAgregaronIntro :: Plagio
+leAgregaronIntro obraPlagio obraOriginal = nombreIncluidoEnElFinal obraPlagio obraOriginal && fuePublicadaDespues obraPlagio obraOriginal
 
---nombreIncluidoEnElFinal :: Obra -> Obra -> Bool
---nombreIncluidoEnElFinal obraPlagio obraOriginal = take (( length . versionCruda . texto) obraOriginal) ((reverse . versionCruda . texto) obraPlagio)
-
+nombreIncluidoEnElFinal :: Obra -> Obra -> Bool
+nombreIncluidoEnElFinal obraPlagio obraOriginal = (versionCruda . reverse . texto) obraOriginal == (take ((length . versionCruda . texto) obraOriginal) ((versionCruda . reverse . texto) obraPlagio))
 
 -- Inventar otra forma de detectar plagio, utilizando una expresión lambda.
+
+-- Misma cantidad de vocales 
+plagioRaro :: Plagio
+plagioRaro = (\obraPlagio obraOriginal -> (length . soloVocales . texto) obraPlagio == (length . soloVocales . texto) obraOriginal)
+
+esVocal :: Char -> Bool 
+esVocal letra = letra `elem` "aeiouáéíóúAEIOUÁÉÍÓÚ"
+
+soloVocales :: String -> String
+soloVocales = filter (esVocal)
