@@ -131,3 +131,78 @@ esVocal letra = letra `elem` "aeiouáéíóúAEIOUÁÉÍÓÚ"
 
 soloVocales :: String -> String
 soloVocales = filter (esVocal)
+
+-- BOTS --
+
+-- Existen diferentes bots, y cada uno detecta diversas formas de plagio. Además se conoce su fabricante.
+-- 4) Modelar dos bots de ejemplo, incluyendo todas las formas de detección existentes hasta ahora.
+
+data Bot = UnBot {
+    formasDePlagio :: [Plagio],
+    fabricante :: String
+}deriving(Show, Eq)
+
+bot1 :: Bot
+bot1 = UnBot [copiaLiteral, empiezaIgual 10] "Sony"
+
+botito :: Bot
+botito = UnBot [leAgregaronIntro, plagioRaro] "Nintendo"
+
+-- 5) Un bot detecta si una obra es plagio de otra si verifica alguna de las formas de detección que maneja.
+
+detectarPlagio :: Bot -> Plagio 
+detectarPlagio bot obraPlagio obraOriginal = any (\plagio -> plagio obraPlagio obraOriginal) (formasDePlagio bot)
+
+-- 6) Dado un conjunto de autores y un bot, detectar si es una cadena de plagiadores. 
+-- Es decir, el segundo plagió al primero, el tercero al segundo, y así. Se considera que un autor plagió a otro cuando
+-- alguna de sus obras es plagio de alguna de las del otro según el bot.
+
+cadenaDePlagiadores :: [Autor] -> Bot -> Bool
+cadenaDePlagiadores [] _                        = True          
+cadenaDePlagiadores [unicoAutor] _              = True
+cadenaDePlagiadores [autor1,autor2] bot         = loPlagio autor2 autor1 bot
+cadenaDePlagiadores (autor1:autor2:autores) bot = loPlagio autor2 autor1 bot && cadenaDePlagiadores (autor2:autores) bot
+
+loPlagio :: Autor -> Autor -> Bot -> Bool
+loPlagio autorPlagiador autorOriginal bot = detectarAlgunPlagio bot (obras autorPlagiador) (obras autorPlagiador) 
+
+detectarAlgunPlagio :: Bot -> [Obra] -> [Obra] -> Bool
+detectarAlgunPlagio bot [] _ = False
+detectarAlgunPlagio bot _ [] = False
+detectarAlgunPlagio bot (obraPlagio1:obrasPlagiadas) (obraOriginal1:obrasOriginales) =
+    detectarPlagio bot obraPlagio1 obraOriginal1 || detectarAlgunPlagio bot (obraPlagio1:obrasPlagiadas) obrasOriginales || detectarAlgunPlagio bot obrasPlagiadas (obraOriginal1:obrasOriginales)
+
+-- 7) Dado un conjunto de autores y un bot, encontrar a los autores que  "hicieron plagio pero aprendieron",  
+-- que significa que luego de que el bot detectara que una de sus obras fue plagio de alguna de los otros autores, 
+-- nunca más volvió a plagiar. En definitiva, su plagio detectado fue el primero y el último.
+
+--hicieronPlagioPeroAprendieron :: Bot -> [Autor] -> [Autor]
+--hicieronPlagioPeroAprendieron
+
+-- INFINITO --
+-- 8)
+-- a) Codificar una obra infinita.
+
+obraInfinita :: Obra
+obraInfinita = UnaObra {texto = cycle "Hola ", anio = 2024}
+
+-- b) ¿Qué sucede si se desea verificar si esa obra es plagio de otra con cada una de las formas existentes? 
+-- Justificar conceptualmente en cada caso
+
+-- En las diferentes formas existentes de verificar el plagio ocurrira lo siguiente:
+
+-- Si quisiera saber si es una copiaLiteral de otra obra, esto seria imposible de obtener un resultado concreto porque es necesario
+-- el conocimiento completo del texto de las obras para verificar si son coincidentes en sus versiones crudas
+
+-- En el caso de leAgregaronIntro ocurre lo mismo con respecto al resultado que en copiaLiterla, aca se necesita tener 
+-- conocimiento del final de la obra plagio y como justamente la obra que es plagio es la obra infinita, entonces nunca
+-- se llegara al final de la misma porque literalmente no tiene un final determinado entonces ni puedo decir si en dicho
+-- final se encuentro el texto de la obra original
+
+-- Para la situacion de empiezaIgual si se podria llegar a un resultado debido a que en este caso no es necesario tener un
+-- conocimiento de todo el texto de la obra que realizo el plagio, simplemente agarro una n cantidad de caracteres y los
+-- comparo con la misma n cantidad de caracteres de la obra original y veo si son iguales. Esto es perfectamente posible gracias
+-- a la evaluacion perezosa (lazy evaluation) que utiliza haskell, primero siempre evalua lo que tiene que hacer y luego que
+-- parametros utilizar. Asi que por ejemplo, si solo necesita las primeras 10 letras del texto de la obra infinita, solo 
+-- "calculara" la obra hasta obtener las 10 letras, sin ser necesario calcular lo que resta del texto de la obra (NO va a 
+-- trabajar sobre los parametros/o su totalidad a menos que sea estrictamente necesario)
